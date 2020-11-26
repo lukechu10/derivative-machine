@@ -25,6 +25,24 @@ impl TryFrom<Token> for BinOpKind {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum UnaryOpKind {
+    Plus,
+    Minus,
+}
+
+impl TryFrom<Token> for UnaryOpKind {
+    type Error = ();
+
+    fn try_from(value: Token) -> Result<Self, Self::Error> {
+        match value {
+            Token::Plus => Ok(UnaryOpKind::Plus),
+            Token::Minus => Ok(UnaryOpKind::Minus),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     // atoms
@@ -34,6 +52,10 @@ pub enum Expr {
     Binary {
         left: Box<Expr>,
         op: BinOpKind,
+        right: Box<Expr>,
+    },
+    Unary {
+        op: UnaryOpKind,
         right: Box<Expr>,
     },
     // used when filling in invalid syntax
@@ -88,23 +110,36 @@ where
     }
 
     fn parse_expr_bp(&mut self, min_bp: i32) -> Expr {
-        let mut left = self.parse_atom();
+        let mut left = match self.current_tok.get_prefix_bp() {
+            ((), -1) => self.parse_atom(), // not prefix
+            ((), right_bp) => {
+                let prefix_op: UnaryOpKind = self
+                    .eat_tok()
+                    .try_into()
+                    .expect("non negative bp should be valid unary op");
+                let right = self.parse_expr_bp(right_bp);
+                Expr::Unary {
+                    op: prefix_op,
+                    right: Box::new(right),
+                }
+            }
+        };
 
         loop {
-            let (left_bp, right_bp) = self.current_tok.get_bp();
+            let (left_bp, right_bp) = self.current_tok.get_infix_bp();
 
             // stop parsing
             if left_bp < min_bp {
                 break;
             }
-            let binop: BinOpKind = self
+            let bin_op: BinOpKind = self
                 .eat_tok()
                 .try_into()
                 .expect("non negative bp should be valid binop");
             let right = self.parse_expr_bp(right_bp);
             left = Expr::Binary {
                 left: Box::new(left),
-                op: binop,
+                op: bin_op,
                 right: Box::new(right),
             }
         }
