@@ -16,6 +16,10 @@ pub enum Token {
     Slash,
     #[token("^")]
     Exponent,
+    #[token("(")]
+    OpenParen,
+    #[token(")")]
+    CloseParen,
     #[error]
     #[regex(r"[ \t\n\f]+", logos::skip)]
     Error,

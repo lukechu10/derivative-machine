@@ -1,5 +1,5 @@
 use crate::lexer::Token;
-use std::{convert::TryFrom, convert::TryInto, iter::Peekable};
+use std::{convert::TryFrom, convert::TryInto, fmt, iter::Peekable};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BinOpKind {
@@ -25,6 +25,22 @@ impl TryFrom<Token> for BinOpKind {
     }
 }
 
+impl fmt::Display for BinOpKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                BinOpKind::Plus => "+",
+                BinOpKind::Minus => "-",
+                BinOpKind::Asterisk => "*",
+                BinOpKind::Slash => "/",
+                BinOpKind::Exponent => "^",
+            }
+        )
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum UnaryOpKind {
     Plus,
@@ -43,6 +59,26 @@ impl TryFrom<Token> for UnaryOpKind {
     }
 }
 
+impl fmt::Display for UnaryOpKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                UnaryOpKind::Plus => "+",
+                UnaryOpKind::Minus => "-",
+            }
+        )
+    }
+}
+
+/// Represents an expression. To print out the expression in a human readable format, use the `Display::fmt` trait.
+/// # Example
+///
+/// ```
+/// let expr = Expr::Literal(3);
+/// assert_eq!(std::fmt::Display::fmt(expr).unwrap(), "3");
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     // atoms
@@ -60,6 +96,40 @@ pub enum Expr {
     },
     // used when filling in invalid syntax
     Error,
+}
+
+impl fmt::Display for Expr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Expr::Literal(num) => write!(f, "{}", num),
+            Expr::Identifier(ident) => write!(f, "{}", ident),
+            Expr::Binary { left, op, right } => write!(f, "({} {} {})", left, op, right),
+            Expr::Unary { op, right } => write!(f, "({}{})", op, right),
+            Expr::Error => write!(f, "err"),
+        }
+    }
+}
+
+pub trait ExprVisitor: Sized {
+    /// Callback when visiting an AST node.
+    fn visit(&mut self, expr: &mut Expr) {
+        walk_expr(expr, self);
+    }
+}
+
+pub fn walk_expr(expr: &mut Expr, visitor: &mut impl ExprVisitor) {
+    match expr {
+        Expr::Literal(_) => {}
+        Expr::Identifier(_) => {}
+        Expr::Binary { left, op: _, right } => {
+            visitor.visit(left.as_mut());
+            visitor.visit(right.as_mut());
+        }
+        Expr::Unary { op: _, right } => {
+            visitor.visit(right.as_mut());
+        }
+        Expr::Error => {}
+    }
 }
 
 pub struct Parser<T>
@@ -105,6 +175,13 @@ where
         match self.eat_tok() {
             Token::Number(num) => Expr::Literal(num),
             Token::Identifier(ident) => Expr::Identifier(ident.into()),
+            Token::OpenParen => {
+                let expr = self.parse_expr();
+                match self.eat_tok() {
+                    Token::CloseParen => expr,
+                    _ => self.unexpected("a '(' token"),
+                }
+            }
             _ => self.unexpected("an expression"),
         }
     }
