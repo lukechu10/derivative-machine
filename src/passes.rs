@@ -1,3 +1,4 @@
 //! AST passes
 
-pub mod simplify;
+pub mod derivative;
+pub mod fold;

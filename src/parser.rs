@@ -101,7 +101,14 @@ pub enum Expr {
 impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Expr::Literal(num) => write!(f, "{}", num),
+            Expr::Literal(num) => {
+                if *num >= 0.0 {
+                    write!(f, "{}", num)
+                } else {
+                    // print negative number in paren
+                    write!(f, "({})", num)
+                }
+            }
             Expr::Identifier(ident) => write!(f, "{}", ident),
             Expr::Binary { left, op, right } => write!(f, "({} {} {})", left, op, right),
             Expr::Unary { op, right } => write!(f, "({}{})", op, right),

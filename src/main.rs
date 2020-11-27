@@ -1,9 +1,10 @@
 #![feature(box_patterns)]
+#![feature(or_patterns)]
 
 use colored::Colorize;
 use logos::Logos;
 use parser::{ExprVisitor, Parser};
-use passes::simplify::SimplifyVisitor;
+use passes::{derivative::derivative, fold::FoldVisitor};
 use std::error::Error;
 use std::io::Write;
 
@@ -20,13 +21,26 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         let mut tokens = lexer::Token::lexer(&line);
         let mut parser = Parser::from(&mut tokens);
+
         let mut ast = parser.parse();
         if !parser.errors().is_empty() {
             dbg!(parser.errors());
         }
 
-        let mut fold_visitor = SimplifyVisitor;
+        let mut fold_visitor = FoldVisitor;
         fold_visitor.visit(&mut ast);
-        println!("{} {}", "<".bright_black(), format!("{}", ast).yellow());
+        println!(
+            "{} {}",
+            "< f\t=".bright_black(),
+            format!("{}", ast).yellow()
+        );
+
+        let mut derivative = derivative(&ast, "x");
+        fold_visitor.visit(&mut derivative);
+        println!(
+            "{} {}",
+            "< df/dx\t=".bright_black(),
+            format!("{}", derivative).yellow()
+        );
     }
 }

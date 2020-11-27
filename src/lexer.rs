@@ -14,6 +14,7 @@ pub enum Token {
     Asterisk,
     #[token("/")]
     Slash,
+    #[token("**")]
     #[token("^")]
     Exponent,
     #[token("(")]
