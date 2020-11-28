@@ -1,46 +1,21 @@
+#![recursion_limit = "512"]
 #![feature(box_patterns)]
 #![feature(or_patterns)]
 
-use colored::Colorize;
-use logos::Logos;
-use parser::{ExprVisitor, Parser};
-use passes::{derivative::derivative, fold::FoldVisitor};
 use std::error::Error;
-use std::io::Write;
 
 mod lexer;
 mod parser;
 mod passes;
+mod app;
+
+// Use `wee_alloc` as the global allocator.
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    loop {
-        print!("{} ", ">".bright_black());
-        std::io::stdout().flush()?;
-        let mut line = String::new();
-        std::io::stdin().read_line(&mut line)?;
+    wasm_logger::init(wasm_logger::Config::default());
+    yew::start_app::<app::App>();
 
-        let mut tokens = lexer::Token::lexer(&line);
-        let mut parser = Parser::from(&mut tokens);
-
-        let mut ast = parser.parse();
-        if !parser.errors().is_empty() {
-            dbg!(parser.errors());
-        }
-
-        let mut fold_visitor = FoldVisitor;
-        fold_visitor.visit(&mut ast);
-        println!(
-            "{} {}",
-            "< f\t=".bright_black(),
-            format!("{}", ast).yellow()
-        );
-
-        let mut derivative = derivative(&ast, "x");
-        fold_visitor.visit(&mut derivative);
-        println!(
-            "{} {}",
-            "< df/dx\t=".bright_black(),
-            format!("{}", derivative).yellow()
-        );
-    }
+    Ok(())
 }

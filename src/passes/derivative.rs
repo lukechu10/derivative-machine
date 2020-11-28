@@ -11,9 +11,9 @@ fn fold(mut expr: Expr) -> Expr {
 }
 
 // Reading comments: k is a constant. u, v are variables
-pub fn derivative(expr: &Expr, id: &str) -> Expr {
+pub fn derivative(expr: &Expr, id: &str) -> Result<Expr, String> {
     let expr = &fold(expr.clone());
-    match expr {
+    Ok(match expr {
         // k' = 0
         Expr::Literal(_) => Expr::Literal(0.0),
         Expr::Identifier(ident) => {
@@ -26,20 +26,20 @@ pub fn derivative(expr: &Expr, id: &str) -> Expr {
         Expr::Binary { left, op, right } => match op {
             // (u + v)' = u' + v'
             BinOpKind::Plus => Expr::Binary {
-                left: Box::new(derivative(left, id)),
+                left: Box::new(derivative(left, id)?),
                 op: BinOpKind::Plus,
-                right: Box::new(derivative(right, id)),
+                right: Box::new(derivative(right, id)?),
             },
             // (u - v)' = u' - v'
             BinOpKind::Minus => Expr::Binary {
-                left: Box::new(derivative(left, id)),
+                left: Box::new(derivative(left, id)?),
                 op: BinOpKind::Minus,
-                right: Box::new(derivative(right, id)),
+                right: Box::new(derivative(right, id)?),
             },
             // (uv)' = u'v + uv'
             BinOpKind::Asterisk => Expr::Binary {
                 left: Box::new(Expr::Binary {
-                    left: Box::new(derivative(left, id)),
+                    left: Box::new(derivative(left, id)?),
                     op: BinOpKind::Asterisk,
                     right: right.clone(),
                 }),
@@ -47,7 +47,7 @@ pub fn derivative(expr: &Expr, id: &str) -> Expr {
                 right: Box::new(Expr::Binary {
                     left: left.clone(),
                     op: BinOpKind::Asterisk,
-                    right: Box::new(derivative(right, id)),
+                    right: Box::new(derivative(right, id)?),
                 }),
             },
             // treat (u / v)' as (u * v ^ -1)'
@@ -62,7 +62,7 @@ pub fn derivative(expr: &Expr, id: &str) -> Expr {
                     }),
                 },
                 id,
-            ),
+            )?,
             // (u ^ k)' = ku ^ (k - 1)
             BinOpKind::Exponent => {
                 if let box Expr::Literal(_) = right {
@@ -80,17 +80,20 @@ pub fn derivative(expr: &Expr, id: &str) -> Expr {
                         }),
                     }
                 } else {
-                    todo!();
+                    return Err(format!(
+                        "not yet implemented, cannot take the derivative of {}",
+                        expr
+                    ));
                 }
             }
         },
         Expr::Unary { op, right } => match op {
-            UnaryOpKind::Plus => derivative(&right, id),
+            UnaryOpKind::Plus => derivative(&right, id)?,
             UnaryOpKind::Minus => Expr::Unary {
                 op: UnaryOpKind::Minus,
-                right: Box::new(derivative(&right, id)),
+                right: Box::new(derivative(&right, id)?),
             },
         },
         Expr::Error => Expr::Error,
-    }
+    })
 }
