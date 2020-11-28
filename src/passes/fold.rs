@@ -133,6 +133,22 @@ impl ExprVisitor for FoldVisitorInternal {
                     UnaryOpKind::Minus => -*right_lit,
                 });
             }
+            // fold same identifier add into multiplication, e.g. x + x = 2x
+            // TODO: fold left and right with same power, e.g. (x ^ 2) + (3x ^ 2)
+            Expr::Binary {
+                left: box Expr::Identifier(left_id),
+                op: BinOpKind::Plus,
+                right: box Expr::Identifier(right_id),
+            } => {
+                if left_id == right_id {
+                    self.last_pass_folded = true;
+                    *expr = Expr::Binary {
+                        left: Box::new(Expr::Literal(2.0)),
+                        op: BinOpKind::Asterisk,
+                        right: Box::new(Expr::Identifier(left_id.clone())),
+                    };
+                }
+            }
             _ => {}
         }
         walk_expr(expr, self);
