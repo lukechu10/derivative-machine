@@ -1,9 +1,18 @@
 //! Transforms the AST into its derivative.
 
-use crate::parser::{BinOpKind, Expr, UnaryOpKind};
+use crate::parser::{BinOpKind, Expr, ExprVisitor, UnaryOpKind};
+use crate::passes::fold::FoldVisitor;
+
+/// Creates a [`FoldVisitor`], visits the `expr`, and returns the folded AST.
+fn fold(mut expr: Expr) -> Expr {
+    let mut fold_visitor = FoldVisitor;
+    fold_visitor.visit(&mut expr);
+    expr
+}
 
 // Reading comments: k is a constant. u, v are variables
 pub fn derivative(expr: &Expr, id: &str) -> Expr {
+    let expr = &fold(expr.clone());
     match expr {
         // k' = 0
         Expr::Literal(_) => Expr::Literal(0.0),
