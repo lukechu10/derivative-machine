@@ -56,6 +56,15 @@ impl Component for App {
 
                 // compute folded expression and derivative
                 let mut tokens = Token::lexer(&self.input);
+                let mut tokens2 = tokens.clone();
+                if tokens2.next().is_none() {
+                    self.items.push(Item {
+                        kind: ItemKind::Error,
+                        text: "no input found, skipping".to_string(),
+                    });
+                    return true;
+                }
+
                 let mut parser = Parser::from(&mut tokens);
                 let mut ast = parser.parse();
 
