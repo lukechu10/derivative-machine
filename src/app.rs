@@ -131,34 +131,36 @@ impl Component for App {
     fn view(&self) -> Html {
         html! {
             <div>
-                {
-                    for self.items.iter().map(|item| match item.kind {
-                        ItemKind::Input => html! {
-                            <p class="input">
-                                <i class="sub">{ "> " }</i>
-                                { &item.text }
+                <div class="output-area">
+                    {
+                        for self.items.iter().map(|item| match item.kind {
+                            ItemKind::Input => html! {
+                                <p class="input">
+                                    <i class="sub">{ "> " }</i>
+                                    { &item.text }
+                                    </p>
+                            },
+                            ItemKind::ParsedAs => html! {
+                                <p class="parsed-as">
+                                    <i class="sub">{ "f(x) = " }</i>
+                                    { &item.text }
                                 </p>
-                        },
-                        ItemKind::ParsedAs => html! {
-                            <p class="parsed-as">
-                                <i class="sub">{ "f(x) = " }</i>
-                                { &item.text }
-                            </p>
-                        },
-                        ItemKind::Derivative => html! {
-                            <p class="derivative">
-                                <i class="sub">{ "df/dx = " }</i>
-                                { &item.text }
-                            </p>
-                        },
-                        ItemKind::Error => html! {
-                            <p class="error">
-                                {" Error: " }
-                                <i class="error-msg">{ &item.text }</i>
-                            </p>
-                        }
-                    })
-                }
+                            },
+                            ItemKind::Derivative => html! {
+                                <p class="derivative">
+                                    <i class="sub">{ "df/dx = " }</i>
+                                    { &item.text }
+                                </p>
+                            },
+                            ItemKind::Error => html! {
+                                <p class="error">
+                                    {" Error: " }
+                                    <i class="error-msg">{ &item.text }</i>
+                                </p>
+                            }
+                        })
+                    }
+                </div>
 
                 <input
                     type="text"
