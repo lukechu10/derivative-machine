@@ -63,6 +63,7 @@ pub fn derivative(expr: &Expr, id: &str) -> Result<Expr, String> {
                 id,
             )?,
             // (u ^ k)' = ku ^ (k - 1)
+            // FIXME: Use chain rule instead of power rule, e.g. (1 / x) ^ 2 does not work. Power rule can be used as an optimization.
             BinOpKind::Exponent => {
                 if let box Expr::Literal(_) = right {
                     Expr::Binary {

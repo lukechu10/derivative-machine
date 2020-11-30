@@ -135,6 +135,18 @@ impl Component for App {
                         Simplify.visit(&mut derivative);
                         Prettify.visit(&mut derivative);
                         Simplify.visit(&mut derivative);
+
+                        if self.debug_mode {
+                            let now = web_sys::window().unwrap().performance().unwrap().now();
+                            self.items.push(Item {
+                                kind: ItemKind::DebugMsg,
+                                text: format!(
+                                    "Simplify and prettify derivative - took {}ms",
+                                    now - start
+                                ),
+                            });
+                        }
+
                         self.items.push(Item {
                             kind: ItemKind::Derivative,
                             text: format!("{}", derivative),
@@ -148,10 +160,6 @@ impl Component for App {
 
                 if self.debug_mode {
                     let now = web_sys::window().unwrap().performance().unwrap().now();
-                    self.items.push(Item {
-                        kind: ItemKind::DebugMsg,
-                        text: format!("Simplify and prettify derivative - took {}ms", now - start),
-                    });
                     self.items.push(Item {
                         kind: ItemKind::DebugMsg,
                         text: format!("Total time elapsed - {}ms", now - initial_start),

@@ -36,6 +36,11 @@ lazy_static! {
 
         ("(_2 * _1) + _1", "_1 * (_2 + 1)"),
 
+        ("(_1 / _2) / _3)", "_1 / (_2 * _3)"),
+
+        ("_1 * _1", "_1 ^ 2"),
+        ("(_1 ^ _2) * _1", "_1 ^ (_2 + 1)"),
+
         // simplify operations with commutativity, e.g. 2 * (3 * x) => 6 * x
         ("_lit1 + (_lit2 + _3)", "(_lit1 + _lit2) + _3"), // addition
         ("_lit1 * (_lit2 * _3)", "(_lit1 * _lit2) * _3"), // multiplication
