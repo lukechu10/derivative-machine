@@ -40,7 +40,7 @@ impl Token {
     /// Returns the binding power for the prefix operator or `((), -1)` if not a valid operator.
     pub fn get_prefix_bp(&self) -> ((), i32) {
         match self {
-            Token::Plus | Token::Minus => ((), 8),
+            Token::Minus => ((), 8),
             _ => ((), -1),
         }
     }

@@ -1,12 +1,11 @@
 //! Transforms the AST into its derivative.
 
 use crate::parser::{BinOpKind, Expr, ExprVisitor, UnaryOpKind};
-use crate::passes::fold::FoldVisitor;
+use crate::transformations::simplify::Simplify;
 
 /// Creates a [`FoldVisitor`], visits the `expr`, and returns the folded AST.
 fn fold(mut expr: Expr) -> Expr {
-    let mut fold_visitor = FoldVisitor;
-    fold_visitor.visit(&mut expr);
+    Simplify.visit(&mut expr);
     expr
 }
 
@@ -64,6 +63,7 @@ pub fn derivative(expr: &Expr, id: &str) -> Result<Expr, String> {
                 id,
             )?,
             // (u ^ k)' = ku ^ (k - 1)
+            // FIXME: Use chain rule instead of power rule, e.g. (1 / x) ^ 2 does not work. Power rule can be used as an optimization.
             BinOpKind::Exponent => {
                 if let box Expr::Literal(_) = right {
                     Expr::Binary {
@@ -88,7 +88,6 @@ pub fn derivative(expr: &Expr, id: &str) -> Result<Expr, String> {
             }
         },
         Expr::Unary { op, right } => match op {
-            UnaryOpKind::Plus => derivative(&right, id)?,
             UnaryOpKind::Minus => Expr::Unary {
                 op: UnaryOpKind::Minus,
                 right: Box::new(derivative(&right, id)?),

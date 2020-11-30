@@ -1,13 +1,16 @@
-#![recursion_limit = "512"]
+#![recursion_limit = "2048"]
 #![feature(box_patterns)]
 #![feature(or_patterns)]
+#![feature(option_unwrap_none)]
 
 use std::error::Error;
 
+mod app;
 mod lexer;
 mod parser;
 mod passes;
-mod app;
+mod rule;
+mod transformations;
 
 // Use `wee_alloc` as the global allocator.
 #[global_allocator]
