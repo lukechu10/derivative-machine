@@ -1,6 +1,7 @@
+use crate::lexer::Token;
 use crate::parser::{ExprVisitor, Parser};
 use crate::passes::derivative::derivative;
-use crate::{lexer::Token, transformations::simplify::Simplify};
+use crate::transformations::{prettify::Prettify, simplify::Simplify};
 use logos::Logos;
 use yew::prelude::*;
 
@@ -75,22 +76,26 @@ impl Component for App {
                     }));
                 }
 
-                // FoldVisitor.visit(&mut ast);
-                self.items.push(Item {
-                    kind: ItemKind::ParsedAs,
-                    text: format!("{}", ast.clone()),
-                });
                 Simplify.visit(&mut ast);
-
                 self.items.push(Item {
                     kind: ItemKind::ParsedAs,
                     text: format!("{}", ast),
                 });
 
+                // do not prettify expr used for derivative
+                let mut ast2 = ast.clone();
+                Prettify.visit(&mut ast2);
+                Simplify.visit(&mut ast2);
+
+                self.items.push(Item {
+                    kind: ItemKind::ParsedAs,
+                    text: format!("{}", ast2),
+                });
+
                 match derivative(&ast, "x") {
                     Ok(mut derivative) => {
-                        // FoldVisitor.visit(&mut derivative);
                         Simplify.visit(&mut derivative);
+                        Prettify.visit(&mut derivative);
                         self.items.push(Item {
                             kind: ItemKind::Derivative,
                             text: format!("{}", derivative),

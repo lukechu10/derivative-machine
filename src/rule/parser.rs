@@ -173,10 +173,6 @@ where
             .push(format!("unexpected token, expected {}", expected));
         RuleExpr::Error
     }
-
-    pub fn errors(&self) -> &Vec<String> {
-        &self.errors
-    }
 }
 
 #[cfg(test)]

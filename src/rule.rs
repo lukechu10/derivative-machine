@@ -12,7 +12,8 @@ use std::collections::BTreeMap;
 pub struct MatchResult<'a> {
     /// `true` if the match was successful, `false` otherwise.
     pub matches: bool,
-    /// A list of matched wildcards. Will be empty if match failed.
+    /// A list of matched wildcards.
+    /// A failed match does not necessarily mean `matched_exprs` is empty. For instance, if a wildcard is successfully matched, then a fail occurs, the wildcard result will still be kept.
     /// All wildcard ids should be unique.
     pub matched_exprs: BTreeMap<i32, &'a Expr>,
 }
@@ -29,32 +30,33 @@ impl RuleExpr {
     /// # Params
     /// * `expr` - The expression to try to match.
     /// * `matched_exprs` - A list of matched expressions from wildcards.
-    /// # Panics
-    /// This method panics if two wildcard matches have the same id.
     fn match_expr_inner<'a>(
         &self,
         expr: &'a Expr,
         matched_exprs: &mut BTreeMap<i32, &'a Expr>,
     ) -> bool {
+        // Returns true if wildcard is successful match (no match with same id yet, or already matched same Expr).
+        // Else returns false.
+        let mut insert_added_match = |id: i32, expr: &'a Expr| {
+            let existing = matched_exprs.get(&id);
+            if existing.is_none() || existing.unwrap() == &expr {
+                matched_exprs.insert(id, expr);
+                true
+            } else {
+                false
+            }
+        };
+
         match self {
             RuleExpr::Literal(num_rule) => matches!(expr, Expr::Literal(num) if num == num_rule),
-            RuleExpr::AnySubExpr(id) => {
-                matched_exprs.insert(*id, expr).unwrap_none();
-                true
-            }
+            RuleExpr::AnySubExpr(id) => insert_added_match(*id, expr),
             RuleExpr::AnyLiteral(id) => match expr {
-                Expr::Literal(_) => {
-                    matched_exprs.insert(*id, expr).unwrap_none();
-                    true
-                }
+                Expr::Literal(_) => insert_added_match(*id, expr),
                 _ => false,
             },
             RuleExpr::AnyNonLiteral(id) => match expr {
                 Expr::Literal(_) => false,
-                _ => {
-                    matched_exprs.insert(*id, expr).unwrap_none();
-                    true
-                }
+                _ => insert_added_match(*id, expr),
             },
             RuleExpr::Binary {
                 left: left_rule,

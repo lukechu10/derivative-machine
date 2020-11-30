@@ -17,14 +17,31 @@ lazy_static! {
         ("_1 * 1", "_1"),
         // division with 1
         ("_1 / 1", "_1"),
-        // exponentiation with 1
+
+        ("_1 - _1", "0"),
+        ("_1 / _1", "1"),
+        ("_1 + _1", "2 * _1"),
+
+        // exponentiation identities
+        ("_1 ^ 0", "1"),
         ("_1 ^ 1", "_1"),
-        // fold double exponent, e.g. (x ^ 2) ^ 3 = x ^ 6
-        ("(_1 ^ _lit2) ^ _lit3", "_1 ^ (_lit2 * _lit3)"),
+        ("1 ^ _1", "1"),
+        // ("_1 ^ -1", "1 / _1"),
+        ("(_1 ^ _lit2) ^ _lit3", "_1 ^ (_lit2 * _lit3)"), // fold double exponent, e.g. (x ^ 2) ^ 3 = x ^ 6
+        ("(_1 ^ _2) * (_1 ^ _3)", "_1 ^ (_2 + _3)"),
+
+        ("(_lit1 * _2) / _lit1", "_2"),
+        ("(_lit1 * _2) / _lit3", "(_lit1 / _lit3) * _2"),
+
+        ("(_2 * _1) + _1", "_1 * (_2 + 1)"),
 
         // simplify operations with commutativity, e.g. 2 * (3 * x) => 6 * x
         ("_lit1 + (_lit2 + _3)", "(_lit1 + _lit2) + _3"), // addition
         ("_lit1 * (_lit2 * _3)", "(_lit1 * _lit2) * _3"), // multiplication
+
+        // for normalization purposes
+        // ("(_1 + _2) + _3", "_1 + (_2 + _3)"),
+        // ("(_1 * _2) * _3", "_1 * (_2 * _3)"),
 
         // move literals to left and rest to right, e.g. x * 2 => 2 * x
         ("_nonlit1 + _lit2", "_lit2 + _nonlit1"),

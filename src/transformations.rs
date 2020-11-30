@@ -1,10 +1,14 @@
 //! AST transformations.
 
 pub mod simplify;
+pub mod prettify;
 
 use crate::parser::Expr;
 use crate::rule::parser::RuleExpr;
 use crate::rule::MatchResult;
+
+/// The max number of iterations per apply. Exceeding this amount will cause an error.
+pub const MAX_ITERATIONS_PER_APPLY: i32 = 500;
 
 pub enum TransformOut<'a> {
     OutPattern(RuleExpr),
@@ -56,6 +60,7 @@ impl<'a> RuleTransformSet<'a> {
 
     pub fn apply_rules(&self, expr: &Expr) -> Expr {
         let mut expr = expr.clone();
+        let mut i = 0;
         loop {
             let mut last_iter_transformed = false;
 
@@ -77,7 +82,12 @@ impl<'a> RuleTransformSet<'a> {
 
             if !last_iter_transformed {
                 break expr;
+            } else if i > MAX_ITERATIONS_PER_APPLY {
+                log::warn!("Exceeded MAX_ITERATIONS_PER_APPLY, exiting immediately");
+                break expr;
             }
+
+            i += 1;
         }
     }
 }
