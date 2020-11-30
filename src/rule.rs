@@ -12,6 +12,8 @@ use std::collections::BTreeMap;
 pub struct MatchResult<'a> {
     /// `true` if the match was successful, `false` otherwise.
     pub matches: bool,
+    /// Original expression (input).
+    pub source_expr: &'a Expr,
     /// A list of matched wildcards.
     /// A failed match does not necessarily mean `matched_exprs` is empty. For instance, if a wildcard is successfully matched, then a fail occurs, the wildcard result will still be kept.
     /// All wildcard ids should be unique.
@@ -73,9 +75,11 @@ impl RuleExpr {
             RuleExpr::Unary {
                 op: op_rule,
                 right: right_rule,
-            } => {
-                matches!(expr, Expr::Unary { op, right } if op == op_rule && right_rule.match_expr_inner(right, matched_exprs))
-            }
+            } => match expr {
+                _ => {
+                    matches!(expr, Expr::Unary {op, right} if op == op_rule && right_rule.match_expr_inner(right, matched_exprs))
+                }
+            },
             RuleExpr::Error => false,
         }
     }
@@ -88,6 +92,7 @@ impl RuleExpr {
         let matches = self.match_expr_inner(expr, &mut matched_exprs);
         MatchResult {
             matches,
+            source_expr: expr,
             matched_exprs,
         }
     }

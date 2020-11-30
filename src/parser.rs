@@ -43,7 +43,6 @@ impl fmt::Display for BinOpKind {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum UnaryOpKind {
-    Plus,
     Minus,
 }
 
@@ -52,7 +51,6 @@ impl TryFrom<Token> for UnaryOpKind {
 
     fn try_from(value: Token) -> Result<Self, Self::Error> {
         match value {
-            Token::Plus => Ok(UnaryOpKind::Plus),
             Token::Minus => Ok(UnaryOpKind::Minus),
             _ => Err(()),
         }
@@ -65,7 +63,6 @@ impl fmt::Display for UnaryOpKind {
             f,
             "{}",
             match self {
-                UnaryOpKind::Plus => "+",
                 UnaryOpKind::Minus => "-",
             }
         )
@@ -204,13 +201,7 @@ where
                 let right = self.parse_expr_bp(right_bp);
                 if let Expr::Literal(num) = right {
                     // fold unary literal in ast
-                    Expr::Literal(
-                        num * if prefix_op == UnaryOpKind::Plus {
-                            1.0
-                        } else {
-                            -1.0
-                        },
-                    )
+                    Expr::Literal(num * -1.0)
                 } else {
                     Expr::Unary {
                         op: prefix_op,

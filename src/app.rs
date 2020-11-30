@@ -96,6 +96,7 @@ impl Component for App {
                     Ok(mut derivative) => {
                         Simplify.visit(&mut derivative);
                         Prettify.visit(&mut derivative);
+                        Simplify.visit(&mut derivative);
                         self.items.push(Item {
                             kind: ItemKind::Derivative,
                             text: format!("{}", derivative),

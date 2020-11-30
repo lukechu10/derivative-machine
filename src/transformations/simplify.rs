@@ -19,6 +19,7 @@ lazy_static! {
         ("_1 / 1", "_1"),
 
         ("_1 - _1", "0"),
+        ("_1 + -_1", "0"),
         ("_1 / _1", "1"),
         ("_1 + _1", "2 * _1"),
 
@@ -38,6 +39,7 @@ lazy_static! {
         // simplify operations with commutativity, e.g. 2 * (3 * x) => 6 * x
         ("_lit1 + (_lit2 + _3)", "(_lit1 + _lit2) + _3"), // addition
         ("_lit1 * (_lit2 * _3)", "(_lit1 * _lit2) * _3"), // multiplication
+        ("_lit1 * (_lit2 / _3)", "(_lit1 * _lit2) / _3"), // multiplication
 
         // for normalization purposes
         // ("(_1 + _2) + _3", "_1 + (_2 + _3)"),
@@ -51,28 +53,28 @@ lazy_static! {
         // fold aritmatic operators
         ("_lit1 + _lit2", &|res| match res.matched_exprs.get(&1).unwrap() {
             Expr::Literal(num1) => match res.matched_exprs.get(&2).unwrap() {
-                Expr::Literal(num2) => Expr::Literal(num1 + num2),
+                Expr::Literal(num2) => Some(Expr::Literal(num1 + num2)),
                 _ => unreachable!()
             },
             _ => unreachable!()
         }),
         ("_lit1 * _lit2", &|res| match res.matched_exprs.get(&1).unwrap() {
             Expr::Literal(num1) => match res.matched_exprs.get(&2).unwrap() {
-                Expr::Literal(num2) => Expr::Literal(num1 * num2),
+                Expr::Literal(num2) => Some(Expr::Literal(num1*num2)),
                 _ => unreachable!()
             },
             _ => unreachable!()
         }),
         ("_lit1 / _lit2", &|res| match res.matched_exprs.get(&1).unwrap() {
             Expr::Literal(num1) => match res.matched_exprs.get(&2).unwrap() {
-                Expr::Literal(num2) => Expr::Literal(num1 / num2),
+                Expr::Literal(num2) => Some(Expr::Literal(num1/num2)),
                 _ => unreachable!()
             },
             _ => unreachable!()
         }),
         ("_lit1 ^ _lit2", &|res| match res.matched_exprs.get(&1).unwrap() {
             Expr::Literal(num1) => match res.matched_exprs.get(&2).unwrap() {
-                Expr::Literal(num2) => Expr::Literal(num1.powf(*num2)),
+                Expr::Literal(num2) => Some(Expr::Literal(num1.powf(*num2))),
                 _ => unreachable!()
             },
             _ => unreachable!()

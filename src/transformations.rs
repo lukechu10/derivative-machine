@@ -1,7 +1,7 @@
 //! AST transformations.
 
-pub mod simplify;
 pub mod prettify;
+pub mod simplify;
 
 use crate::parser::Expr;
 use crate::rule::parser::RuleExpr;
@@ -12,7 +12,8 @@ pub const MAX_ITERATIONS_PER_APPLY: i32 = 500;
 
 pub enum TransformOut<'a> {
     OutPattern(RuleExpr),
-    OutHandler(&'a (dyn Fn(&MatchResult) -> Expr + Sync)),
+    /// A handler to transform the [`Expr`]. If the handler returns `None`, the expression is not modified.
+    OutHandler(&'a (dyn Fn(&MatchResult) -> Option<Expr> + Sync)),
 }
 
 pub struct Transformation<'a> {
@@ -30,7 +31,7 @@ impl<'a> RuleTransformSet<'a> {
         patterns: &[(&str, &str)],
         handlers: &'a [(
             &'a str,
-            &'a (dyn for<'r, 's> Fn(&'r MatchResult<'s>) -> Expr + Sync + 'a),
+            &'a (dyn for<'r, 's> Fn(&'r MatchResult<'s>) -> Option<Expr> + Sync + 'a),
         )],
     ) -> Self {
         let mut transformations: Vec<_> = patterns
@@ -75,7 +76,10 @@ impl<'a> RuleTransformSet<'a> {
                         TransformOut::OutPattern(out) => {
                             expr = out.write_expr(&match_res.matched_exprs)
                         }
-                        TransformOut::OutHandler(handler) => expr = handler(&match_res),
+                        TransformOut::OutHandler(handler) => match handler(&match_res) {
+                            Some(res) => expr = res,
+                            None => last_iter_transformed = false, // if handler returned `None`, no change happened
+                        },
                     }
                 }
             }

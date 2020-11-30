@@ -120,13 +120,7 @@ where
                 let right = self.parse_expr_bp(right_bp);
                 if let RuleExpr::Literal(num) = right {
                     // fold unary literal in ast
-                    RuleExpr::Literal(
-                        num * if prefix_op == UnaryOpKind::Plus {
-                            1.0
-                        } else {
-                            -1.0
-                        },
-                    )
+                    RuleExpr::Literal(num * -1.0)
                 } else {
                     RuleExpr::Unary {
                         op: prefix_op,

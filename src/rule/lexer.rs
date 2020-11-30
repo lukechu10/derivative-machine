@@ -49,7 +49,7 @@ impl RuleToken {
     /// Returns the binding power for the prefix operator or `((), -1)` if not a valid operator.
     pub fn get_prefix_bp(&self) -> ((), i32) {
         match self {
-            RuleToken::Plus | RuleToken::Minus => ((), 8),
+            RuleToken::Minus => ((), 8),
             _ => ((), -1),
         }
     }
@@ -75,7 +75,6 @@ impl TryFrom<RuleToken> for UnaryOpKind {
 
     fn try_from(value: RuleToken) -> Result<Self, Self::Error> {
         match value {
-            RuleToken::Plus => Ok(UnaryOpKind::Plus),
             RuleToken::Minus => Ok(UnaryOpKind::Minus),
             _ => Err(()),
         }

@@ -87,7 +87,6 @@ pub fn derivative(expr: &Expr, id: &str) -> Result<Expr, String> {
             }
         },
         Expr::Unary { op, right } => match op {
-            UnaryOpKind::Plus => derivative(&right, id)?,
             UnaryOpKind::Minus => Expr::Unary {
                 op: UnaryOpKind::Minus,
                 right: Box::new(derivative(&right, id)?),
