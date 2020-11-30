@@ -9,6 +9,7 @@ enum ItemKind {
     Input,
     ParsedAs,
     Derivative,
+    DebugMsg,
     Error,
 }
 
@@ -20,6 +21,7 @@ struct Item {
 pub enum Msg {
     UpdateInput(String),
     AddItem,
+    ToggleDbg,
     Noop,
 }
 
@@ -29,6 +31,7 @@ pub struct App {
     link: ComponentLink<Self>,
     input: String,
     items: Vec<Item>,
+    debug_mode: bool,
 }
 
 impl Component for App {
@@ -40,6 +43,7 @@ impl Component for App {
             link,
             input: "".to_string(),
             items: Vec::new(),
+            debug_mode: false,
         }
     }
 
@@ -50,6 +54,9 @@ impl Component for App {
                 false
             }
             Msg::AddItem => {
+                let mut start: f64 = web_sys::window().unwrap().performance().unwrap().now();
+                let initial_start = start;
+
                 self.items.push(Item {
                     kind: ItemKind::Input,
                     text: self.input.clone(),
@@ -69,6 +76,15 @@ impl Component for App {
                 let mut parser = Parser::from(&mut tokens);
                 let mut ast = parser.parse();
 
+                if self.debug_mode {
+                    let now = web_sys::window().unwrap().performance().unwrap().now();
+                    self.items.push(Item {
+                        kind: ItemKind::DebugMsg,
+                        text: format!("Parsed input - took {}ms", now - start),
+                    });
+                    start = now;
+                }
+
                 if !parser.errors().is_empty() {
                     self.items.extend(parser.errors().iter().map(|error| Item {
                         kind: ItemKind::Error,
@@ -77,15 +93,28 @@ impl Component for App {
                 }
 
                 Simplify.visit(&mut ast);
-                self.items.push(Item {
-                    kind: ItemKind::ParsedAs,
-                    text: format!("{}", ast),
-                });
+                if self.debug_mode {
+                    let now = web_sys::window().unwrap().performance().unwrap().now();
+                    self.items.push(Item {
+                        kind: ItemKind::DebugMsg,
+                        text: format!("Simplify input - took {}ms", now - start),
+                    });
+                    start = now;
+                }
 
                 // do not prettify expr used for derivative
                 let mut ast2 = ast.clone();
                 Prettify.visit(&mut ast2);
                 Simplify.visit(&mut ast2);
+
+                if self.debug_mode {
+                    let now = web_sys::window().unwrap().performance().unwrap().now();
+                    self.items.push(Item {
+                        kind: ItemKind::DebugMsg,
+                        text: format!("Prettify input - took {}ms", now - start),
+                    });
+                    start = now;
+                }
 
                 self.items.push(Item {
                     kind: ItemKind::ParsedAs,
@@ -94,6 +123,15 @@ impl Component for App {
 
                 match derivative(&ast, "x") {
                     Ok(mut derivative) => {
+                        if self.debug_mode {
+                            let now = web_sys::window().unwrap().performance().unwrap().now();
+                            self.items.push(Item {
+                                kind: ItemKind::DebugMsg,
+                                text: format!("Compute derivative - took {}ms", now - start),
+                            });
+                            start = now;
+                        }
+
                         Simplify.visit(&mut derivative);
                         Prettify.visit(&mut derivative);
                         Simplify.visit(&mut derivative);
@@ -106,6 +144,18 @@ impl Component for App {
                         kind: ItemKind::Error,
                         text: err,
                     }),
+                }
+
+                if self.debug_mode {
+                    let now = web_sys::window().unwrap().performance().unwrap().now();
+                    self.items.push(Item {
+                        kind: ItemKind::DebugMsg,
+                        text: format!("Simplify and prettify derivative - took {}ms", now - start),
+                    });
+                    self.items.push(Item {
+                        kind: ItemKind::DebugMsg,
+                        text: format!("Total time elapsed - {}ms", now - initial_start),
+                    });
                 }
 
                 self.input = "".to_string();
@@ -129,6 +179,10 @@ impl Component for App {
 
                 true
             }
+            Msg::ToggleDbg => {
+                self.debug_mode = !self.debug_mode;
+                true
+            }
             Msg::Noop => false,
         }
     }
@@ -143,6 +197,7 @@ impl Component for App {
     fn view(&self) -> Html {
         html! {
             <div>
+                { self.view_header() }
                 <div class="output-area">
                     {
                         for self.items.iter().map(|item| match item.kind {
@@ -161,6 +216,12 @@ impl Component for App {
                             ItemKind::Derivative => html! {
                                 <p class="derivative">
                                     <i class="sub">{ "df/dx = " }</i>
+                                    { &item.text }
+                                </p>
+                            },
+                            ItemKind::DebugMsg => html! {
+                                <p class="debug-msg">
+                                    <i class="sub">{ "[DEBUG]: " }</i>
                                     { &item.text }
                                 </p>
                             },
@@ -186,6 +247,21 @@ impl Component for App {
                     oninput=self.link.callback(|ev: InputData| Msg::UpdateInput(ev.value))
                 />
             </div>
+        }
+    }
+}
+
+impl App {
+    fn view_header(&self) -> Html {
+        html! {
+            <header>
+                { "Derivative calculator - Source: " }
+                <a href="https://github.com/lukechu10/derivative-calculator">{ "lukechu10/derivative-calculator" }</a>
+
+                <i class="debug-mode-toggle" onclick=self.link.callback(|_| Msg::ToggleDbg)>
+                    { format!("Debug mode {}", if self.debug_mode { "on" } else { "off" }) }
+                </i>
+            </header>
         }
     }
 }
