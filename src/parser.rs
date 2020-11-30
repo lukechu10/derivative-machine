@@ -202,9 +202,20 @@ where
                     .try_into()
                     .expect("non negative bp should be valid unary op");
                 let right = self.parse_expr_bp(right_bp);
-                Expr::Unary {
-                    op: prefix_op,
-                    right: Box::new(right),
+                if let Expr::Literal(num) = right {
+                    // fold unary literal in ast
+                    Expr::Literal(
+                        num * if prefix_op == UnaryOpKind::Plus {
+                            1.0
+                        } else {
+                            -1.0
+                        },
+                    )
+                } else {
+                    Expr::Unary {
+                        op: prefix_op,
+                        right: Box::new(right),
+                    }
                 }
             }
         };

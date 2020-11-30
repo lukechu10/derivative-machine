@@ -12,6 +12,8 @@ pub enum RuleToken {
     AnySubExpr(i32),
     #[regex("_lit[0-9.]+", |lex| lex.slice()[4..].parse())]
     AnyLiteral(i32),
+    #[regex("_nonlit[0-9.]+", |lex| lex.slice()[7..].parse())]
+    AnyNonLiteral(i32),
     // operators
     #[token("+")]
     Plus,

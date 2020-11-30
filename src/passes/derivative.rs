@@ -1,12 +1,11 @@
 //! Transforms the AST into its derivative.
 
 use crate::parser::{BinOpKind, Expr, ExprVisitor, UnaryOpKind};
-use crate::passes::fold::FoldVisitor;
+use crate::transformations::simplify::Simplify;
 
 /// Creates a [`FoldVisitor`], visits the `expr`, and returns the folded AST.
 fn fold(mut expr: Expr) -> Expr {
-    let mut fold_visitor = FoldVisitor;
-    fold_visitor.visit(&mut expr);
+    Simplify.visit(&mut expr);
     expr
 }
 

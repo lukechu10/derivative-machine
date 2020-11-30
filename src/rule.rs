@@ -49,6 +49,13 @@ impl RuleExpr {
                 }
                 _ => false,
             },
+            RuleExpr::AnyNonLiteral(id) => match expr {
+                Expr::Literal(_) => false,
+                _ => {
+                    matched_exprs.insert(*id, expr).unwrap_none();
+                    true
+                }
+            },
             RuleExpr::Binary {
                 left: left_rule,
                 op: op_rule,
@@ -85,12 +92,22 @@ impl RuleExpr {
 
     /// Fills in the wildcards of a [`RuleExpr`] with results of `match_res`.
     /// # Panics
-    /// This method panics if a wildcard id is not found in `matched_exprs`.
+    /// This method panics if a wildcard id is not found in `matched_exprs`. This method also panics if the wildcard type does not match.
     pub fn write_expr(&self, matched_exprs: &BTreeMap<i32, &Expr>) -> Expr {
         match self {
             RuleExpr::Literal(num) => Expr::Literal(*num),
-            RuleExpr::AnySubExpr(id) => (*matched_exprs.get(id).unwrap()).clone(),
-            RuleExpr::AnyLiteral(id) => (*matched_exprs.get(id).unwrap()).clone(),
+            RuleExpr::AnySubExpr(id) => (*matched_exprs
+                .get(id)
+                .expect(&format!("wildcard _{} not found", id)))
+            .clone(),
+            RuleExpr::AnyLiteral(id) => (*matched_exprs
+                .get(id)
+                .expect(&format!("wildcard _lit{} not found", id)))
+            .clone(),
+            RuleExpr::AnyNonLiteral(id) => (*matched_exprs
+                .get(id)
+                .expect(&format!("wildcard _nonlit{} not found", id)))
+            .clone(),
             RuleExpr::Binary {
                 left: left_rule,
                 op,
@@ -103,10 +120,28 @@ impl RuleExpr {
             RuleExpr::Unary {
                 op,
                 right: right_rule,
-            } => Expr::Unary {
-                op: *op,
-                right: Box::new(right_rule.write_expr(matched_exprs)),
-            },
+            } => {
+                if *op == UnaryOpKind::Minus {
+                    match **right_rule {
+                        // if literal or literal wildcard, fold directly in emitted ast
+                        RuleExpr::Literal(num) => Expr::Literal(-num),
+                        RuleExpr::AnyLiteral(id) => match *matched_exprs
+                            .get(&id)
+                            .expect(&format!("wildcard _lit{} not found", id))
+                        {
+                            Expr::Literal(num) => Expr::Literal(-num),
+                            _ => unreachable!(),
+                        },
+                        _ => Expr::Unary {
+                            op: *op,
+                            right: Box::new(right_rule.write_expr(matched_exprs)),
+                        },
+                    }
+                } else {
+                    // emit right ast as is
+                    right_rule.write_expr(matched_exprs)
+                }
+            }
             RuleExpr::Error => Expr::Error,
         }
     }

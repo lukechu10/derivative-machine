@@ -10,6 +10,7 @@ mod lexer;
 mod parser;
 mod passes;
 mod rule;
+mod transformations;
 
 // Use `wee_alloc` as the global allocator.
 #[global_allocator]
