@@ -8,7 +8,6 @@ use std::error::Error;
 mod app;
 mod lexer;
 mod parser;
-mod passes;
 mod rule;
 mod transformations;
 

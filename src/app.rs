@@ -1,7 +1,6 @@
-use crate::lexer::Token;
 use crate::parser::{ExprVisitor, Parser};
-use crate::passes::derivative::derivative;
 use crate::transformations::{prettify::Prettify, simplify::Simplify};
+use crate::{lexer::Token, transformations::derivative::derivative};
 use logos::Logos;
 use yew::prelude::*;
 
@@ -121,42 +120,68 @@ impl Component for App {
                     text: format!("{}", ast2),
                 });
 
-                match derivative(&ast, "x") {
-                    Ok(mut derivative) => {
-                        if self.debug_mode {
-                            let now = web_sys::window().unwrap().performance().unwrap().now();
-                            self.items.push(Item {
-                                kind: ItemKind::DebugMsg,
-                                text: format!("Compute derivative - took {}ms", now - start),
-                            });
-                            start = now;
-                        }
+                // match derivative(&ast, "x") {
+                //     Ok(mut derivative) => {
+                //         if self.debug_mode {
+                //             let now = web_sys::window().unwrap().performance().unwrap().now();
+                //             self.items.push(Item {
+                //                 kind: ItemKind::DebugMsg,
+                //                 text: format!("Compute derivative - took {}ms", now - start),
+                //             });
+                //             start = now;
+                //         }
 
-                        Simplify.visit(&mut derivative);
-                        Prettify.visit(&mut derivative);
-                        Simplify.visit(&mut derivative);
+                //         Simplify.visit(&mut derivative);
+                //         Prettify.visit(&mut derivative);
+                //         Simplify.visit(&mut derivative);
 
-                        if self.debug_mode {
-                            let now = web_sys::window().unwrap().performance().unwrap().now();
-                            self.items.push(Item {
-                                kind: ItemKind::DebugMsg,
-                                text: format!(
-                                    "Simplify and prettify derivative - took {}ms",
-                                    now - start
-                                ),
-                            });
-                        }
+                //         if self.debug_mode {
+                //             let now = web_sys::window().unwrap().performance().unwrap().now();
+                //             self.items.push(Item {
+                //                 kind: ItemKind::DebugMsg,
+                //                 text: format!(
+                //                     "Simplify and prettify derivative - took {}ms",
+                //                     now - start
+                //                 ),
+                //             });
+                //         }
 
-                        self.items.push(Item {
-                            kind: ItemKind::Derivative,
-                            text: format!("{}", derivative),
-                        });
-                    }
-                    Err(err) => self.items.push(Item {
-                        kind: ItemKind::Error,
-                        text: err,
-                    }),
+                //         self.items.push(Item {
+                //             kind: ItemKind::Derivative,
+                //             text: format!("{}", derivative),
+                //         });
+                //     }
+                //     Err(err) => self.items.push(Item {
+                //         kind: ItemKind::Error,
+                //         text: err,
+                //     }),
+                // }
+                let mut derivative = derivative(&mut ast);
+                if self.debug_mode {
+                    let now = web_sys::window().unwrap().performance().unwrap().now();
+                    self.items.push(Item {
+                        kind: ItemKind::DebugMsg,
+                        text: format!("Compute derivative - took {}ms", now - start),
+                    });
+                    start = now;
                 }
+
+                Simplify.visit(&mut derivative);
+                Prettify.visit(&mut derivative);
+                Simplify.visit(&mut derivative);
+
+                if self.debug_mode {
+                    let now = web_sys::window().unwrap().performance().unwrap().now();
+                    self.items.push(Item {
+                        kind: ItemKind::DebugMsg,
+                        text: format!("Simplify and prettify derivative - took {}ms", now - start),
+                    });
+                }
+
+                self.items.push(Item {
+                    kind: ItemKind::Derivative,
+                    text: format!("{}", derivative),
+                });
 
                 if self.debug_mode {
                     let now = web_sys::window().unwrap().performance().unwrap().now();

@@ -1,5 +1,6 @@
 //! AST transformations.
 
+pub mod derivative;
 pub mod prettify;
 pub mod simplify;
 
@@ -93,5 +94,32 @@ impl<'a> RuleTransformSet<'a> {
 
             i += 1;
         }
+    }
+
+    /// Same as `apply_rules` except every rule can be applied at most 1 time.
+    /// Once a match is found, exits immediately. If no match is found, returns `None`.
+    /// If a handler returns `None`, it is the same as no match.
+    pub fn apply_rules_once(&self, expr: &Expr) -> Option<Expr> {
+        let mut expr = expr.clone();
+        for transform in &self.rules {
+            // match pattern
+            let match_res = transform.pattern.match_expr(&expr);
+            if match_res.matches {
+                // write output
+                match &transform.out {
+                    TransformOut::OutPattern(out) => {
+                        expr = out.write_expr(&match_res.matched_exprs)
+                    }
+                    TransformOut::OutHandler(handler) => match handler(&match_res) {
+                        Some(res) => expr = res,
+                        None => continue, // if handler returned `None`, no change happened
+                    },
+                }
+
+                return Some(expr);
+            }
+        }
+
+        None
     }
 }
