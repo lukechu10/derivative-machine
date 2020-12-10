@@ -29,6 +29,13 @@ pub fn derivative(expr: &Expr) -> Expr {
                     right: Box::new(derivative(res.matched_exprs.get(&2).unwrap())),
                 })
             }),
+            ("_1 - _2", &|res: &MatchResult| {
+                Some(Expr::Binary {
+                    left: Box::new(derivative(res.matched_exprs.get(&1).unwrap())),
+                    op: BinOpKind::Minus,
+                    right: Box::new(derivative(res.matched_exprs.get(&2).unwrap())),
+                })
+            }),
             ("_1 * _2", &|res: &MatchResult| {
                 Some(Expr::Binary {
                     left: Box::new(Expr::Binary {
@@ -68,7 +75,7 @@ pub fn derivative(expr: &Expr) -> Expr {
                 })
             }),
             // use chain rule g(x) ^ n => n * g(x) ^ (n - 1) * g'(x)
-            ("_1 ^ _2", &|res: &MatchResult| {
+            ("_1 ^ _lit2", &|res: &MatchResult| {
                 Some(Expr::Binary {
                     left: Box::new(Expr::Binary {
                         left: Box::new((*res.matched_exprs.get(&2).unwrap()).clone()),
@@ -88,7 +95,10 @@ pub fn derivative(expr: &Expr) -> Expr {
                 })
             }),
             // catch all
-            ("_1", &|_res| Some(Expr::Error)),
+            ("_1", &|res| {
+                log::warn!("derivative not yet implemented for {}", res.source_expr);
+                Some(Expr::Error)
+            }),
         ],
     );
 
