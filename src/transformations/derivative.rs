@@ -12,6 +12,8 @@ pub fn derivative(expr: &Expr) -> Expr {
                 "_1",
                 &|res: &MatchResult| match res.matched_exprs.get(&1).unwrap() {
                         Expr::Identifier(id) if id == "x" /* TODO */ => Some(Expr::Literal(1.0)),
+                        // Treat all other identifiers as constant.
+                        Expr::Identifier(_id) => Some(Expr::Literal(0.0)),
                         _ => None,
                     },
             ),
