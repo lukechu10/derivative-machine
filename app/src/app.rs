@@ -150,7 +150,7 @@ fn add_item(items: &Signal<Vec<Item>>, input: &str, debug_mode: bool) {
         text: format!("{}", ast2),
     });
 
-    let mut derivative = derivative(&mut ast);
+    let mut derivative = derivative(&ast);
     if debug_mode {
         let now = web_sys::window().unwrap().performance().unwrap().now();
         push_item(Item {

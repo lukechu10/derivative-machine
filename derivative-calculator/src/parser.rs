@@ -69,13 +69,8 @@ impl fmt::Display for UnaryOpKind {
     }
 }
 
-/// Represents an expression. To print out the expression in a human readable format, use the `Display::fmt` trait.
-/// # Example
-///
-/// ```
-/// let expr = Expr::Literal(3);
-/// assert_eq!(std::fmt::Display::fmt(expr).unwrap(), "3");
-/// ```
+/// Represents an expression. To print out the expression in a human readable format, use the [`fmt::Display`] trait.
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     // atoms
@@ -178,7 +173,7 @@ where
     fn parse_atom(&mut self) -> Expr {
         match self.eat_tok() {
             Token::Number(num) => Expr::Literal(num),
-            Token::Identifier(ident) => Expr::Identifier(ident.into()),
+            Token::Identifier(ident) => Expr::Identifier(ident),
             Token::OpenParen => {
                 let expr = self.parse_expr();
                 match self.eat_tok() {

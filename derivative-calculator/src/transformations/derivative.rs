@@ -106,5 +106,5 @@ pub fn derivative(expr: &Expr) -> Expr {
 
     transforms
         .apply_rules_once(expr)
-        .expect(&format!("derivative not yet implemented for {}", expr))
+        .unwrap_or_else(|| panic!("derivative not yet implemented for {}", expr))
 }

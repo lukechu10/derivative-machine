@@ -27,14 +27,13 @@ pub struct RuleTransformSet<'a> {
     pub rules: Vec<Transformation<'a>>,
 }
 
+pub type RuleTransformHandler<'a> = &'a [(
+    &'a str,
+    &'a (dyn for<'r, 's> Fn(&'r MatchResult<'s>) -> Option<Expr> + Sync + 'a),
+)];
+
 impl<'a> RuleTransformSet<'a> {
-    pub fn new_from_str(
-        patterns: &[(&str, &str)],
-        handlers: &'a [(
-            &'a str,
-            &'a (dyn for<'r, 's> Fn(&'r MatchResult<'s>) -> Option<Expr> + Sync + 'a),
-        )],
-    ) -> Self {
+    pub fn new_from_str(patterns: &[(&str, &str)], handlers: RuleTransformHandler<'a>) -> Self {
         let mut transformations: Vec<_> = patterns
             .iter()
             .map(|(pattern, out)| {

@@ -50,6 +50,7 @@ impl RuleExpr {
         };
 
         match self {
+            #[allow(clippy::float_cmp)] // FIXME
             RuleExpr::Literal(num_rule) => matches!(expr, Expr::Literal(num) if num == num_rule),
             RuleExpr::AnySubExpr(id) => insert_added_match(*id, expr),
             RuleExpr::AnyLiteral(id) => match expr {
@@ -75,11 +76,9 @@ impl RuleExpr {
             RuleExpr::Unary {
                 op: op_rule,
                 right: right_rule,
-            } => match expr {
-                _ => {
-                    matches!(expr, Expr::Unary {op, right} if op == op_rule && right_rule.match_expr_inner(right, matched_exprs))
-                }
-            },
+            } => {
+                matches!(expr, Expr::Unary {op, right} if op == op_rule && right_rule.match_expr_inner(right, matched_exprs))
+            }
             RuleExpr::Error => false,
         }
     }
@@ -105,15 +104,15 @@ impl RuleExpr {
             RuleExpr::Literal(num) => Expr::Literal(*num),
             RuleExpr::AnySubExpr(id) => (*matched_exprs
                 .get(id)
-                .expect(&format!("wildcard _{} not found", id)))
+                .unwrap_or_else(|| panic!("wildcard _{} not found", id)))
             .clone(),
             RuleExpr::AnyLiteral(id) => (*matched_exprs
                 .get(id)
-                .expect(&format!("wildcard _lit{} not found", id)))
+                .unwrap_or_else(|| panic!("wildcard _lit{} not found", id)))
             .clone(),
             RuleExpr::AnyNonLiteral(id) => (*matched_exprs
                 .get(id)
-                .expect(&format!("wildcard _nonlit{} not found", id)))
+                .unwrap_or_else(|| panic!("wildcard _nonlit{} not found", id)))
             .clone(),
             RuleExpr::Binary {
                 left: left_rule,
@@ -134,7 +133,7 @@ impl RuleExpr {
                         RuleExpr::Literal(num) => Expr::Literal(-num),
                         RuleExpr::AnyLiteral(id) => match *matched_exprs
                             .get(&id)
-                            .expect(&format!("wildcard _lit{} not found", id))
+                            .unwrap_or_else(|| panic!("wildcard _lit{} not found", id))
                         {
                             Expr::Literal(num) => Expr::Literal(-num),
                             _ => unreachable!(),

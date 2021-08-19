@@ -4,13 +4,7 @@ use crate::parser::{BinOpKind, UnaryOpKind};
 use crate::rule::lexer::RuleToken;
 use std::{convert::TryInto, fmt, iter::Peekable};
 
-/// Represents an rule expression. To print out the rule expression in a human readable format, use the `Display::fmt` trait.
-/// # Example
-///
-/// ```
-/// let rule = RuleExpr::Literal(3);
-/// assert_eq!(std::fmt::Display::fmt(rule).unwrap(), "3");
-/// ```
+/// Represents an rule expression. To print out the rule expression in a human readable format, use the [`fmt::Display`] trait.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RuleExpr {
     // atoms
