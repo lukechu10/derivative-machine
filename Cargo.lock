@@ -86,10 +86,27 @@ dependencies = [
 name = "derivative-calculator"
 version = "0.1.0"
 dependencies = [
+ "expect-test",
  "lazy_static",
  "log",
  "logos",
  "web-sys",
+]
+
+[[package]]
+name = "dissimilar"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc4b29f4b9bb94bf267d57269fd0706d343a160937108e9619fe380645428abb"
+
+[[package]]
+name = "expect-test"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2300477aab3a378f2ca00a4fbd4dc713654ab7ed790e4017493cb33656280633"
+dependencies = [
+ "dissimilar",
+ "once_cell",
 ]
 
 [[package]]

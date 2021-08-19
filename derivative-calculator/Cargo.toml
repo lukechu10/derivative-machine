@@ -19,3 +19,6 @@ features = [
     "Window",
 ]
 version = "0.3.45"
+
+[dev-dependencies]
+expect-test = "1.1.0"

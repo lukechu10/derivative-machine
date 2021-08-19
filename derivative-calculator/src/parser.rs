@@ -162,7 +162,11 @@ where
     T: Iterator<Item = Token>,
 {
     pub fn parse(&mut self) -> Expr {
-        self.parse_expr()
+        let expr = self.parse_expr();
+        if self.eat_tok() != Token::Eof {
+            self.unexpected();
+        }
+        expr
     }
 
     /// Alias for `self.parse_expr_bp(0)` to accept any expression.
@@ -178,10 +182,10 @@ where
                 let expr = self.parse_expr();
                 match self.eat_tok() {
                     Token::CloseParen => expr,
-                    _ => self.unexpected("a '(' token"),
+                    _ => self.unexpected_expected("a '(' token"),
                 }
             }
-            _ => self.unexpected("an expression"),
+            _ => self.unexpected_expected("an expression"),
         }
     }
 
@@ -233,12 +237,18 @@ where
     /// Returns the current token. Sets `self.current_tok` to the next [`Token`] in the lexer.
     fn eat_tok(&mut self) -> Token {
         let res = self.current_tok.clone();
-        self.current_tok = self.lexer.next().unwrap_or(Token::Error);
+        self.current_tok = self.lexer.next().unwrap_or(Token::Eof);
         res
     }
 
     /// Returns [`Expr::Error`].
-    fn unexpected(&mut self, expected: &str) -> Expr {
+    fn unexpected(&mut self) -> Expr {
+        self.errors.push("unexpected token".to_string());
+        Expr::Error
+    }
+
+    /// Returns [`Expr::Error`].
+    fn unexpected_expected(&mut self, expected: &str) -> Expr {
         self.errors
             .push(format!("unexpected token, expected {}", expected));
         Expr::Error
@@ -246,5 +256,108 @@ where
 
     pub fn errors(&self) -> &Vec<String> {
         &self.errors
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use expect_test::{expect, Expect};
+    use logos::Logos;
+
+    use super::*;
+
+    fn check(input: &str, expect: Expect) {
+        let lexer = Token::lexer(input);
+        let mut parser = Parser::from(lexer);
+        let expr = parser.parse();
+
+        let mut actual = expr.to_string();
+        for error in parser.errors() {
+            actual += &format!("\n[ERROR]: {}", error);
+        }
+        expect.assert_eq(&actual);
+    }
+
+    #[test]
+    fn literal() {
+        check("1", expect![[r#"1"#]]);
+        check("-3", expect![[r#"(-3)"#]]);
+    }
+
+    #[test]
+    fn vars() {
+        check("x", expect![[r#"x"#]]);
+        check("abc", expect![[r#"abc"#]]);
+    }
+
+    #[test]
+    fn bin_ops() {
+        check("1 + 2", expect![[r#"(1 + 2)"#]]);
+        check("-3 - 4", expect![[r#"((-3) - 4)"#]]);
+        check("1 + -2", expect![[r#"(1 + (-2))"#]]);
+        check("-3 + -4", expect![[r#"((-3) + (-4))"#]]);
+        check("-3 + -4", expect![[r#"((-3) + (-4))"#]]);
+
+        check("1 + 2", expect![[r#"(1 + 2)"#]]);
+        check("1 - 2", expect![[r#"(1 - 2)"#]]);
+        check("1 * 2", expect![[r#"(1 * 2)"#]]);
+        check("1 / 2", expect![[r#"(1 / 2)"#]]);
+        check("1 ^ 2", expect![[r#"(1 ^ 2)"#]]);
+        check("1 ** 2", expect![[r#"(1 ^ 2)"#]]);
+    }
+
+    #[test]
+    fn paren() {
+        check("(1)", expect![[r#"1"#]]);
+        check("(-1)", expect![[r#"(-1)"#]]);
+
+        check("(1 + 2)", expect![[r#"(1 + 2)"#]]);
+        check("(1 + 2) * 3", expect![[r#"((1 + 2) * 3)"#]]);
+        check("1 + (2 * 3)", expect![[r#"(1 + (2 * 3))"#]]);
+    }
+
+    #[test]
+    fn precedence() {
+        check("1 + 2 * 3", expect![[r#"(1 + (2 * 3))"#]]);
+        check("1 + 2 - 3", expect![[r#"((1 + 2) - 3)"#]]);
+        check("1 * 2 + 3 * 4", expect![[r#"((1 * 2) + (3 * 4))"#]]);
+    }
+
+    #[test]
+    fn error_unknown_operator() {
+        check(
+            "1 $ 2",
+            expect![[r#"
+            1
+            [ERROR]: unexpected token"#]],
+        );
+    }
+
+    #[test]
+    fn error_unmatched_paren() {
+        check(
+            "(1",
+            expect![[r#"
+                err
+                [ERROR]: unexpected token, expected a '(' token"#]],
+        );
+        check(
+            "(1 + 2",
+            expect![[r#"
+                err
+                [ERROR]: unexpected token, expected a '(' token"#]],
+        );
+        check(
+            "1)",
+            expect![[r#"
+            1
+            [ERROR]: unexpected token"#]],
+        );
+        check(
+            "1 + 2)",
+            expect![[r#"
+            (1 + 2)
+            [ERROR]: unexpected token"#]],
+        );
     }
 }

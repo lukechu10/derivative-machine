@@ -24,6 +24,7 @@ pub enum Token {
     #[error]
     #[regex(r"[ \t\n\f]+", logos::skip)]
     Error,
+    Eof,
 }
 
 impl Token {
