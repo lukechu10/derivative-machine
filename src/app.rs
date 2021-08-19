@@ -238,7 +238,7 @@ impl Component for App {
                                 <p class="input">
                                     <i class="sub">{ "> " }</i>
                                     { &item.text }
-                                    </p>
+                                </p>
                             },
                             ItemKind::ParsedAs => html! {
                                 <p class="parsed-as">

@@ -1,0 +1,19 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+console_error_panic_hook = "0.1.6"
+derivative-calculator = { path = "../derivative-calculator" }
+log = "0.4.14"
+logos = "0.11.0"
+sycamore = { git = "https://github.com/sycamore-rs/sycamore", rev = "fe7f185" }
+wasm-logger = "0.2.0"
+wasm-bindgen = "0.2.75"
+
+[dependencies.web-sys]
+version = "0.3.52"
+features = ["KeyboardEvent"]
