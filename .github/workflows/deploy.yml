@@ -28,7 +28,7 @@ jobs:
           | tar -xzf- && sudo mv trunk /usr/bin/
 
       - name: Build
-        run: trunk build app/index.html --release --public-url /derivative-calculator/
+        run: trunk build app/index.html --release --public-url /derivative-machine/
 
       - name: Create .nojekyll file
         run: touch dist/.nojekyll
