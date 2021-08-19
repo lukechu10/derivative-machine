@@ -1,1 +1,1 @@
-# derivative-calculator
+# derivative-machine

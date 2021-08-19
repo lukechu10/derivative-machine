@@ -27,9 +27,9 @@ struct Item {
 fn header(debug_mode: Signal<bool>) -> Template<G> {
     template! {
         header {
-            "Derivative calculator - Source: "
-            a(href="https://github.com/lukechu10/derivative-calculator") {
-                "lukechu10/derivative-calculator"
+            "Derivative machine - Source: "
+            a(href="https://github.com/lukechu10/derivative-machine") {
+                "lukechu10/derivative-machine"
             }
 
             i(
