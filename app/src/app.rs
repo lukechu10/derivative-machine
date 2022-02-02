@@ -215,7 +215,7 @@ pub fn App<G: Html>(ctx: ScopeRef) -> View<G> {
         let ev = ev.unchecked_into::<KeyboardEvent>();
         if ev.code() == "Enter" {
             // Add new item
-            add_item(&items, &input.get(), *debug_mode.get());
+            add_item(items, &input.get(), *debug_mode.get());
             // Reset input
             input.set(String::new());
         }
