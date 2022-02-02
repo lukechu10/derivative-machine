@@ -23,9 +23,9 @@ struct Item {
     text: String,
 }
 
-#[component(Header<G>)]
-fn header(debug_mode: Signal<bool>) -> Template<G> {
-    template! {
+#[component]
+fn Header<'a, G: Html>(ctx: ScopeRef<'a>, debug_mode: &'a Signal<bool>) -> View<G> {
+    view! { ctx,
         header {
             "Derivative machine - Source: "
             a(href="https://github.com/lukechu10/derivative-machine") {
@@ -34,7 +34,7 @@ fn header(debug_mode: Signal<bool>) -> Template<G> {
 
             i(
                 class="debug-mode-toggle",
-                on:click=cloned!((debug_mode) => move |_| debug_mode.set(!*debug_mode.get())),
+                on:click=move |_| debug_mode.set(!*debug_mode.get()),
             ) {
                 "Debug mode "
                 (if *debug_mode.get() { "on" } else { "off" })
@@ -43,30 +43,30 @@ fn header(debug_mode: Signal<bool>) -> Template<G> {
     }
 }
 
-#[component(ItemView<G>)]
-fn item_view(item: Item) -> Template<G> {
+#[component]
+fn ItemView<G: Html>(ctx: ScopeRef, item: Item) -> View<G> {
     match item.kind {
-        ItemKind::Input => template! {
+        ItemKind::Input => view! { ctx,
             p(class="input") {
                 i(class="sub") { "> " } (item.text)
             }
         },
-        ItemKind::ParsedAs => template! {
+        ItemKind::ParsedAs => view! { ctx,
             p(class="parsed-as") {
                 i(class="sub") { "f(x)  = " } (item.text)
             }
         },
-        ItemKind::Derivative => template! {
+        ItemKind::Derivative => view! { ctx,
             p(class="derivative") {
                 i(class="sub") { "f'(x) = " } (item.text)
             }
         },
-        ItemKind::DebugMsg => template! {
+        ItemKind::DebugMsg => view! { ctx,
             p(class="debug-msg") {
                 i(class="sub") { "[DEBUG]: " } (item.text)
             }
         },
-        ItemKind::Error => template! {
+        ItemKind::Error => view! { ctx,
             p(class="error") {
                 i(class="error-msg") { "[ERROR]: " (item.text) }
             }
@@ -203,15 +203,15 @@ fn add_item(items: &Signal<Vec<Item>>, input: &str, debug_mode: bool) {
     // scroll_to_bottom.emit(());
 }
 
-#[component(App<G>)]
-pub fn app() -> Template<G> {
+#[component]
+pub fn App<G: Html>(ctx: ScopeRef) -> View<G> {
     log::info!("started");
 
-    let items = Signal::new(Vec::<Item>::new());
-    let input = Signal::new(String::new());
-    let debug_mode = Signal::new(false);
+    let items = ctx.create_signal(Vec::<Item>::new());
+    let input = ctx.create_signal(String::new());
+    let debug_mode = ctx.create_signal(false);
 
-    let keyup = cloned!((items, input, debug_mode) => move |ev: Event| {
+    let keyup = move |ev: Event| {
         let ev = ev.unchecked_into::<KeyboardEvent>();
         if ev.code() == "Enter" {
             // Add new item
@@ -219,16 +219,16 @@ pub fn app() -> Template<G> {
             // Reset input
             input.set(String::new());
         }
-    });
+    };
 
-    template! {
+    view! { ctx,
         div {
             Header(debug_mode)
             div(class="output-area") {
-                Indexed(IndexedProps {
-                    iterable: items.handle(),
-                    template: |item| template! { ItemView(item) }
-                })
+                Indexed {
+                    iterable: items,
+                    view: |ctx, item| view! { ctx, ItemView(item) }
+                }
             }
             input(
                 type="text",
