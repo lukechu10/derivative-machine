@@ -34,7 +34,7 @@ fn Header<'a, G: Html>(ctx: ScopeRef<'a>, debug_mode: &'a Signal<bool>) -> View<
 
             i(
                 class="debug-mode-toggle",
-                on:click=move |_| debug_mode.set(!*debug_mode.get()),
+                on:click=|_| debug_mode.set(!*debug_mode.get()),
             ) {
                 "Debug mode "
                 (if *debug_mode.get() { "on" } else { "off" })
@@ -211,7 +211,7 @@ pub fn App<G: Html>(ctx: ScopeRef) -> View<G> {
     let input = ctx.create_signal(String::new());
     let debug_mode = ctx.create_signal(false);
 
-    let keyup = move |ev: Event| {
+    let keyup = |ev: Event| {
         let ev = ev.unchecked_into::<KeyboardEvent>();
         if ev.code() == "Enter" {
             // Add new item
