@@ -1,6 +1,6 @@
 body {
   font-family: monospace;
-  background-color: #040441;
+  background-color: rgb(4, 4, 65);
   color: white;
 }
 
@@ -15,10 +15,10 @@ header {
   line-height: 30px;
   width: 100%;
   height: 30px;
-  background-color: #302e46;
+  background-color: rgb(48, 46, 70);
 }
 header a {
-  color: #10b610;
+  color: rgb(16, 182, 16);
 }
 header .debug-mode-toggle {
   position: fixed;
@@ -42,11 +42,11 @@ header .debug-mode-toggle {
 }
 
 .debug-msg {
-  color: #797777;
+  color: rgb(121, 119, 119);
 }
 
 .error {
-  color: #ce0707;
+  color: rgb(206, 7, 7);
   font-weight: bold;
   text-decoration: underline;
 }
@@ -55,7 +55,7 @@ header .debug-mode-toggle {
 }
 
 .sub {
-  color: #929292;
+  color: rgb(146, 146, 146);
 }
 
 input {
@@ -67,7 +67,7 @@ input {
   bottom: 0;
   width: 100%;
   height: 30px;
-  background-color: #00002e;
+  background-color: rgb(0, 0, 46);
   color: white;
   font-family: monospace;
   border: none;

@@ -23,9 +23,13 @@ struct Item {
     text: String,
 }
 
+fn window() -> web_sys::Window {
+    web_sys::window().unwrap()
+}
+
 #[component]
-fn Header<'a, G: Html>(ctx: ScopeRef<'a>, debug_mode: &'a Signal<bool>) -> View<G> {
-    view! { ctx,
+fn Header<'a, G: Html>(cx: Scope<'a>, debug_mode: &'a Signal<bool>) -> View<G> {
+    view! { cx,
         header {
             "Derivative machine - Source: "
             a(href="https://github.com/lukechu10/derivative-machine") {
@@ -44,29 +48,29 @@ fn Header<'a, G: Html>(ctx: ScopeRef<'a>, debug_mode: &'a Signal<bool>) -> View<
 }
 
 #[component]
-fn ItemView<G: Html>(ctx: ScopeRef, item: Item) -> View<G> {
+fn ItemView<G: Html>(cx: Scope, item: Item) -> View<G> {
     match item.kind {
-        ItemKind::Input => view! { ctx,
+        ItemKind::Input => view! { cx,
             p(class="input") {
                 i(class="sub") { "> " } (item.text)
             }
         },
-        ItemKind::ParsedAs => view! { ctx,
+        ItemKind::ParsedAs => view! { cx,
             p(class="parsed-as") {
                 i(class="sub") { "f(x)  = " } (item.text)
             }
         },
-        ItemKind::Derivative => view! { ctx,
+        ItemKind::Derivative => view! { cx,
             p(class="derivative") {
                 i(class="sub") { "f'(x) = " } (item.text)
             }
         },
-        ItemKind::DebugMsg => view! { ctx,
+        ItemKind::DebugMsg => view! { cx,
             p(class="debug-msg") {
                 i(class="sub") { "[DEBUG]: " } (item.text)
             }
         },
-        ItemKind::Error => view! { ctx,
+        ItemKind::Error => view! { cx,
             p(class="error") {
                 i(class="error-msg") { "[ERROR]: " (item.text) }
             }
@@ -81,7 +85,7 @@ fn add_item(items: &Signal<Vec<Item>>, input: &str, debug_mode: bool) {
         items.set(tmp);
     };
 
-    let mut start: f64 = web_sys::window().unwrap().performance().unwrap().now();
+    let mut start: f64 = window().performance().unwrap().now();
     let initial_start = start;
 
     push_item(Item {
@@ -104,7 +108,7 @@ fn add_item(items: &Signal<Vec<Item>>, input: &str, debug_mode: bool) {
     let mut ast = parser.parse();
 
     if debug_mode {
-        let now = web_sys::window().unwrap().performance().unwrap().now();
+        let now = window().performance().unwrap().now();
         push_item(Item {
             kind: ItemKind::DebugMsg,
             text: format!("Parsed input - took {}ms", now - start),
@@ -123,7 +127,7 @@ fn add_item(items: &Signal<Vec<Item>>, input: &str, debug_mode: bool) {
 
     Simplify.visit(&mut ast);
     if debug_mode {
-        let now = web_sys::window().unwrap().performance().unwrap().now();
+        let now = window().performance().unwrap().now();
         push_item(Item {
             kind: ItemKind::DebugMsg,
             text: format!("Simplify input - took {}ms", now - start),
@@ -137,7 +141,7 @@ fn add_item(items: &Signal<Vec<Item>>, input: &str, debug_mode: bool) {
     Simplify.visit(&mut ast2);
 
     if debug_mode {
-        let now = web_sys::window().unwrap().performance().unwrap().now();
+        let now = window().performance().unwrap().now();
         push_item(Item {
             kind: ItemKind::DebugMsg,
             text: format!("Prettify input - took {}ms", now - start),
@@ -152,7 +156,7 @@ fn add_item(items: &Signal<Vec<Item>>, input: &str, debug_mode: bool) {
 
     let mut derivative = derivative(&ast);
     if debug_mode {
-        let now = web_sys::window().unwrap().performance().unwrap().now();
+        let now = window().performance().unwrap().now();
         push_item(Item {
             kind: ItemKind::DebugMsg,
             text: format!("Compute derivative - took {}ms", now - start),
@@ -165,7 +169,7 @@ fn add_item(items: &Signal<Vec<Item>>, input: &str, debug_mode: bool) {
     Simplify.visit(&mut derivative);
 
     if debug_mode {
-        let now = web_sys::window().unwrap().performance().unwrap().now();
+        let now = window().performance().unwrap().now();
         push_item(Item {
             kind: ItemKind::DebugMsg,
             text: format!("Simplify and prettify derivative - took {}ms", now - start),
@@ -178,38 +182,32 @@ fn add_item(items: &Signal<Vec<Item>>, input: &str, debug_mode: bool) {
     });
 
     if debug_mode {
-        let now = web_sys::window().unwrap().performance().unwrap().now();
+        let now = window().performance().unwrap().now();
         push_item(Item {
             kind: ItemKind::DebugMsg,
             text: format!("Total time elapsed - {}ms", now - initial_start),
         });
     }
 
-    // // wrap scroll to bottom in Callback to call after list is rendered
-    // // FIXME: call in next update
-    // let scroll_to_bottom = self.link.callback_once(|()| {
-    //     web_sys::window().unwrap().scroll_to_with_x_and_y(
-    //         0.0,
-    //         web_sys::window()
-    //             .unwrap()
-    //             .document()
-    //             .unwrap()
-    //             .body()
-    //             .unwrap()
-    //             .scroll_height() as f64,
-    //     );
-    //     Msg::Noop
-    // });
-    // scroll_to_bottom.emit(());
+    window().scroll_to_with_x_and_y(
+        0.0,
+        web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .body()
+            .unwrap()
+            .scroll_height() as f64,
+    );
 }
 
 #[component]
-pub fn App<G: Html>(ctx: ScopeRef) -> View<G> {
+pub fn App<G: Html>(cx: Scope) -> View<G> {
     log::info!("started");
 
-    let items = ctx.create_signal(Vec::<Item>::new());
-    let input = ctx.create_signal(String::new());
-    let debug_mode = ctx.create_signal(false);
+    let items = create_signal(cx, Vec::<Item>::new());
+    let input = create_signal(cx, String::new());
+    let debug_mode = create_signal(cx, false);
 
     let keyup = |ev: Event| {
         let ev = ev.unchecked_into::<KeyboardEvent>();
@@ -221,13 +219,13 @@ pub fn App<G: Html>(ctx: ScopeRef) -> View<G> {
         }
     };
 
-    view! { ctx,
+    view! { cx,
         div {
             Header(debug_mode)
             div(class="output-area") {
                 Indexed {
                     iterable: items,
-                    view: |ctx, item| view! { ctx, ItemView(item) }
+                    view: |cx, item| view! { cx, ItemView(item) }
                 }
             }
             input(

@@ -4,14 +4,15 @@
     <title>Derivative calculator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- <link data-trunk rel="rust" data-wasm-opt="3" /> -->
-    <link rel="stylesheet" href="/main-ef1b9ffbe22ca126.css">
+    <link rel="stylesheet" href="/main-800226656a02cce7.css">
   
-<link rel="preload" href="/index-868c81c7c58da875_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
-<link rel="modulepreload" href="/index-868c81c7c58da875.js"></head>
+<link rel="preload" href="/app-6fc45a572d176fcc_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/app-6fc45a572d176fcc.js"></head>
   <body>
 
-<script type="module">import init from '/index-868c81c7c58da875.js';init('/index-868c81c7c58da875_bg.wasm');</script><script>(function () {
-    var url = 'ws://' + window.location.host + '/_trunk/ws';
+<script type="module">import init from '/app-6fc45a572d176fcc.js';init('/app-6fc45a572d176fcc_bg.wasm');</script><script>(function () {
+    var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    var url = protocol + '//' + window.location.host + '/_trunk/ws';
     var poll_interval = 5000;
     var reload_upon_connect = () => {
         window.setTimeout(
