@@ -223,10 +223,10 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
         div {
             Header(debug_mode)
             div(class="output-area") {
-                Indexed {
-                    iterable: items,
-                    view: |cx, item| view! { cx, ItemView(item) }
-                }
+                Indexed(
+                    iterable=items,
+                    view=|cx, item| view! { cx, ItemView(item) }
+                )
             }
             input(
                 type="text",
