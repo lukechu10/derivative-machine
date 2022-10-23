@@ -18,7 +18,7 @@ features = [
     "Performance",
     "Window",
 ]
-version = "0.3.59"
+version = "0.3.60"
 
 [dev-dependencies]
 expect-test = "1.4.0"
